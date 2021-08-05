@@ -6,7 +6,7 @@ import requests
 import requests_cache
 from sqlalchemy import exists
 
-from models import Item, Offer
+from models import Item, Offer, Inventory, Error
 
 OMIT_LIST = {'images', 'offers', 'user_data'}
 
@@ -123,7 +123,7 @@ def add_upc_to_db(upc, db):
         db.session.add(new_item)
     db.session.commit()
     new_item_id = db.session.query(Item).filter_by(upc=new_item.upc).first().id
-
+    offers = []
     for each in upc.items[0].offers:
         new_offer = Offer(
             item_id=new_item_id,
@@ -161,8 +161,9 @@ def add_upc_to_db(upc, db):
             existing_record.updated_t = new_offer.updated_t
         else:
             db.session.add(new_offer)
+        offers.append(new_offer)
         db.session.commit()
-    return True
+    return [new_item, offers]
 
 
 def serialize(obj):
@@ -196,3 +197,23 @@ def jExtract(obj, key):
             return 0
         else:
             return ''
+
+
+def add_or_update_inventory_item(inventory_item, db):
+    existing_record = db.session.query(Inventory).filter_by(upc=inventory_item.upc)
+    exists_bool = db.session.query(exists().where(Inventory.upc == inventory_item.upc)).scalar()
+    if exists_bool:
+        db.session.query(Inventory).filter(Inventory.upc == inventory_item.upc).update({
+            "item_id": inventory_item.item_id,
+            "upc": inventory_item.upc,
+            "title": inventory_item.title,
+            "description": inventory_item.description,
+            "onhand": inventory_item.onhand,
+            "minimum": inventory_item.minimum,
+            "unit": inventory_item.unit,
+            "priority": inventory_item.priority
+        })
+    else:
+        db.session.add(inventory_item)
+    db.session.commit()
+    return inventory_item

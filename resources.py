@@ -9,7 +9,7 @@ from models import Item, Offer, Error, Inventory
 from models import db
 from operations import upc_query
 from schema import item_schema, items_schema, offer_schema, inventory_schema, inventories_schema
-from operations import add_upc_to_db, serialize, jExtract
+from operations import add_upc_to_db, serialize, jExtract, add_or_update_inventory_item
 
 
 class ItemListResource(Resource):
@@ -145,7 +145,7 @@ class InventoryResource(Resource):
             priority=request.json['priority'],
         )
         existing_record = db.session.query(Inventory).filter_by(upc=new_inventory.upc).first()
-        exists_bool = db.session.query(exists().where(Inventory.upc == new_inventory.upc).where(Offer.merchant == new_offer.merchant)).scalar()
+        exists_bool = db.session.query(exists().where(Inventory.upc == new_inventory.upc)).scalar()
         if exists_bool:
             db.session.query(Inventory).filter(Inventory.upc == new_inventory.upc).update({
                 "item_id": new_inventory.item_id,
@@ -161,3 +161,102 @@ class InventoryResource(Resource):
             db.session.add(new_inventory)
         db.session.commit()
         return inventory_schema.dump(new_inventory)
+
+
+class InventoryPipeline(Resource):
+    def post(self, upc_num, minimum=0, onhand=0, priority=0, item_id=0, title="", description="", unit=""):
+        """Takes in UPC number and creates new inventory item based on url"""
+        upc = upc_query(upc_num)
+        upc_json = json.dumps(upc.__dict__, default=serialize)
+        upc_response = Response(
+            response=upc_json,
+            status=200,
+            mimetype="application/json"
+        )
+        [item, offers] = add_upc_to_db(upc, db)
+        if item_id == 0:
+            try:
+                item_id = int(item.id)
+            except Exception as e:
+                item_id = 0
+        if title == "":
+            try:
+                title = item.title
+            except Exception as e:
+                title = ""
+        if description == "":
+            try:
+                description = item.description
+            except Exception as e:
+                description = ""
+        # region Number Try/Catches
+        try:
+            onhand = float(onhand)
+        except Exception as e:
+            onhand = 0.0
+        try:
+            minimum = float(minimum)
+        except Exception as e:
+            minimum = 0.0
+        try:
+            priority = int(priority)
+        except Exception as e:
+            priority = 0
+        # endregion
+        new_inventory_item = Inventory(
+            item_id=item_id,
+            upc=upc_num,
+            title=title,
+            description=description,
+            onhand=onhand,
+            minimum=minimum,
+            unit=unit,
+            priority=priority,
+        )
+        response = add_or_update_inventory_item(new_inventory_item, db)
+
+        return inventory_schema.dump(response)
+
+
+class UpcOnlyInventoryPipeline(Resource):
+    def post(self, upc_num):
+        """Takes in UPC number and creates new inventory item based on url"""
+        upc = upc_query(upc_num)
+        upc_json = json.dumps(upc.__dict__, default=serialize)
+        upc_response = Response(
+            response=upc_json,
+            status=200,
+            mimetype="application/json"
+        )
+        [item, offers] = add_upc_to_db(upc, db)
+        try:
+            item_id = db.session.query(Item).filter(Item.upc == upc_num).first().id
+            print(db.session.query(Item).filter(Item.upc == upc_num).first().id)
+        except Exception as e:
+            print(db.session.query(Item).filter(Item.upc == upc_num).first().id)
+            item_id = 0
+        try:
+            title = item.title
+        except Exception as e:
+            title = ""
+        try:
+            description = item.description
+        except Exception as e:
+            description = ""
+        unit = ""
+        onhand = 0.0
+        minimum = 0.0
+        priority = 0
+        new_inventory_item = Inventory(
+            item_id=item_id,
+            upc=upc_num,
+            title=title,
+            description=description,
+            onhand=onhand,
+            minimum=minimum,
+            unit=unit,
+            priority=priority,
+        )
+        response = add_or_update_inventory_item(new_inventory_item, db)
+
+        return inventory_schema.dump(response)

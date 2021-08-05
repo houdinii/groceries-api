@@ -86,6 +86,7 @@ class Error(db.Model):
 class Inventory(db.Model):
     __tablename__ = "inventory"
     id = Column(Integer, primary_key=True)
+    timestamp = Column(DateTime, default=datetime.datetime.utcnow)
     item_id = Column(Integer)
     upc = Column(String, unique=True)
     title = Column(String)
