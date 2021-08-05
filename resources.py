@@ -5,10 +5,10 @@ from flask import request, Response
 from flask_restful import Resource
 from sqlalchemy import exists, and_
 
-from models import Item, Offer
+from models import Item, Offer, Error, Inventory
 from models import db
 from operations import upc_query
-from schema import item_schema, items_schema, offer_schema
+from schema import item_schema, items_schema, offer_schema, inventory_schema, inventories_schema
 
 
 class ItemListResource(Resource):
@@ -117,6 +117,49 @@ class UpcResource(Resource):
         )
         add_upc_to_db(upc)
         return upc_response
+
+
+class InventoryListResources(Resource):
+    def get(self):
+        inventory = Inventory.query.all()
+        return inventories_schema.dump(inventory)
+
+
+class InventoryListResource(Resource):
+    def get(self, upc_number):
+        inventory = Inventory.query.where(upc_number == Inventory.upc).first()
+        return inventory_schema.dump(inventory)
+
+
+class InventoryResource(Resource):
+    def post(self):
+        new_inventory = Inventory(
+            item_id=request.json['item_id'],
+            upc=request.json['upc'],
+            title=request.json['title'],
+            description=request.json['description'],
+            onhand=request.json['onhand'],
+            minimum=request.json['minimum'],
+            unit=request.json['unit'],
+            priority=request.json['priority'],
+        )
+        existing_record = db.session.query(Inventory).filter_by(upc=new_inventory.upc).first()
+        exists_bool = db.session.query(exists().where(Inventory.upc == new_inventory.upc).where(Offer.merchant == new_offer.merchant)).scalar()
+        if exists_bool:
+            db.session.query(Inventory).filter(Inventory.upc == new_inventory.upc).update({
+                "item_id": new_inventory.item_id,
+                "upc": new_inventory.upc,
+                "title": new_inventory.title,
+                "description": new_inventory.description,
+                "onhand": new_inventory.onhand,
+                "minimum": new_inventory.minimum,
+                "unit": new_inventory.unit,
+                "priority": new_inventory.priority,
+            })
+        else:
+            db.session.add(new_inventory)
+        db.session.commit()
+        return inventory_schema.dump(new_inventory)
 
 
 def add_upc_to_db(upc):

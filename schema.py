@@ -1,6 +1,6 @@
 from flask_marshmallow import Marshmallow
 
-from models import Item, Offer, Error
+from models import Item, Offer, Error, Inventory
 
 ma = Marshmallow()
 
@@ -54,9 +54,30 @@ class OfferSchema(ma.Schema):
 class ErrorSchema(ma.Schema):
     class Meta:
         fields = (
-
+            "id",
+            "search_url",
+            "upc",
+            "timestamp",
+            "code",
+            "message",
         )
         model = Error
+
+
+class InventorySchema(ma.Schema):
+    class Meta:
+        fields = (
+            "id",
+            "item_id",
+            "upc",
+            "title",
+            "description",
+            "onhand",
+            "minimum",
+            "unit",
+            "priority",
+        )
+        model = Inventory
 
 
 item_schema = ItemSchema()
@@ -65,3 +86,5 @@ offer_schema = OfferSchema()
 offers_schema = OfferSchema(many=True)
 error_schema = ErrorSchema()
 errors_schema = ErrorSchema(many=True)
+inventory_schema = InventorySchema()
+inventories_schema = InventorySchema(many=True)

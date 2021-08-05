@@ -81,3 +81,22 @@ class Error(db.Model):
 
     def __str__(self):
         return f'{self.code}: {self.message}'
+
+
+class Inventory(db.Model):
+    __tablename__ = "inventory"
+    id = Column(Integer, primary_key=True)
+    item_id = Column(Integer)
+    upc = Column(String, unique=True)
+    title = Column(String)
+    description = Column(String)
+    onhand = Column(Float)
+    minimum = Column(Float)
+    unit = Column(String)
+    priority = Column(Integer)
+
+    def __repr__(self):
+        return f"<INVENTORY ITEM {self.Title} - On Hand:{self.onhand}  Minimum: {self.minimum}>"
+
+    def __str__(self):
+        return f'{self.Title} - On Hand:{self.onhand}  Minimum: {self.minimum}'
