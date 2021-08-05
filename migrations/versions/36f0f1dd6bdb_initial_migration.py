@@ -1,8 +1,8 @@
-"""Initial migration
+"""Initial migration.
 
-Revision ID: 80a82e71f5f2
+Revision ID: 36f0f1dd6bdb
 Revises: 
-Create Date: 2021-08-04 22:54:15.630404
+Create Date: 2021-08-05 15:40:31.543764
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '80a82e71f5f2'
+revision = '36f0f1dd6bdb'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -26,6 +26,19 @@ def upgrade():
     sa.Column('code', sa.String(), nullable=True),
     sa.Column('message', sa.String(), nullable=True),
     sa.PrimaryKeyConstraint('id')
+    )
+    op.create_table('inventory',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('item_id', sa.Integer(), nullable=True),
+    sa.Column('upc', sa.String(), nullable=True),
+    sa.Column('title', sa.String(), nullable=True),
+    sa.Column('description', sa.String(), nullable=True),
+    sa.Column('onhand', sa.Float(), nullable=True),
+    sa.Column('minimum', sa.Float(), nullable=True),
+    sa.Column('unit', sa.String(), nullable=True),
+    sa.Column('priority', sa.Integer(), nullable=True),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('upc')
     )
     op.create_table('item',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -81,5 +94,6 @@ def downgrade():
     op.drop_table('item_offer')
     op.drop_table('offer')
     op.drop_table('item')
+    op.drop_table('inventory')
     op.drop_table('error')
     # ### end Alembic commands ###
