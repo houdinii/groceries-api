@@ -1,15 +1,14 @@
 import json
-from datetime import date, time
 
 from flask import request, Response
 from flask_restful import Resource
-from sqlalchemy import exists, and_
+from sqlalchemy import exists
 
-from models import Item, Offer, Error, Inventory
+from models import Item, Offer, Inventory
 from models import db
+from operations import add_upc_to_db, serialize, add_or_update_inventory_item
 from operations import upc_query
 from schema import item_schema, items_schema, offer_schema, inventory_schema, inventories_schema
-from operations import add_upc_to_db, serialize, jExtract, add_or_update_inventory_item
 
 
 class ItemListResource(Resource):

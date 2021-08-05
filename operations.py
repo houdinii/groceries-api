@@ -6,7 +6,7 @@ import requests
 import requests_cache
 from sqlalchemy import exists
 
-from models import Item, Offer, Inventory, Error
+from models import Item, Offer, Inventory
 
 OMIT_LIST = {'images', 'offers', 'user_data'}
 

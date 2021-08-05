@@ -4,7 +4,6 @@ from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import Column, DateTime, Integer, String, ForeignKey, Table, Float
 from sqlalchemy.orm import relationship, backref
 
-
 db = SQLAlchemy()
 Base = db.Model
 
