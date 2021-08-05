@@ -1,0 +1,5 @@
+env
+.idea
+archive
+groceries.sqlite
+search_cache.sqlite
