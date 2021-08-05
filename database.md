@@ -1,3 +1,5 @@
+Initial db initialization steps:
+
 flask db init
 
 flask db migrate -m "Initial migration."
